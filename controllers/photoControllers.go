@@ -42,11 +42,9 @@ func CreatePhoto(c *gin.Context) {
 
 func GetAllPhoto(c *gin.Context) {
 	db := config.GetDB()
-	userData := c.MustGet("userData").(jwt.MapClaims)
-	userID := uint(userData["id"].(float64))
 	var Photos []models.Photo
 
-	err := db.Debug().Where("user_id = ?", userID).Find(&Photos).Error
+	err := db.Debug().Preload("Users").Preload("Comments").Find(&Photos).Error
 
 	if err != nil {
 		helpers.ResponseError(c, err.Error())
@@ -61,8 +59,6 @@ func GetAllPhoto(c *gin.Context) {
 
 func GetPhotoByID(c *gin.Context) {
 	db := config.GetDB()
-	userData := c.MustGet("userData").(jwt.MapClaims)
-	userID := uint(userData["id"].(float64))
 	var Photos []models.Photo
 
 	photoId, err := strconv.Atoi(c.Param("id"))
@@ -71,7 +67,7 @@ func GetPhotoByID(c *gin.Context) {
 		return
 	}
 
-	err = db.Debug().Where("user_id = ?", userID).First(&Photos, photoId).Error
+	err = db.Debug().First(&Photos, photoId).Error
 	if err != nil {
 		helpers.ResponseNotFound(c, err.Error())
 		return
